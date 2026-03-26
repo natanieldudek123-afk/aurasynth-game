@@ -1,5 +1,5 @@
 <?php
-$env = parse_ini_file('.env');
+$env = parse_ini_file('../.env');
 // api/leaderboard.php — Aura Synthesizer v3.0 Leaderboard API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
