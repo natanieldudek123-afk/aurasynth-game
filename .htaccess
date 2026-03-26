@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^api/leaderboard$ api/leaderboard.php [L,QSA]

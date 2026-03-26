@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Synthesizer v3.0</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <canvas id="bgCanvas"></canvas>
+  <div id="screenFlash"></div>
+  <div id="frenzyOverlay" class="hidden"></div>
+  <div id="frenzyBanner" class="hidden">
+    <span id="frenzyBannerText">⚡ FRENZY MODE ACTIVE ⚡</span>
+    <span id="frenzyTimer">60s</span>
+  </div>
+  <div id="floatingTextLayer"></div>
+  <div id="anomalyContainer"></div>
+
+  <!-- TOP BAR -->
+  <header id="topBar">
+    <div class="top-left">
+      <span class="game-title">AURA<span class="title-accent">SYNTH</span></span>
+      <span class="version-tag">v3.0</span>
+    </div>
+    <div class="top-center">
+      <div class="stat-block">
+        <span class="stat-label">LEVEL</span>
+        <span class="stat-value" id="playerLevel">1</span>
+      </div>
+      <div class="xp-bar-wrap">
+        <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBarFill"></div></div>
+        <span class="xp-label" id="xpLabel">0 / 100 XP</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-label">ROLLS</span>
+        <span class="stat-value" id="totalRolls">0</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-label">FRAGS</span>
+        <span class="stat-value frag-color" id="relicFragments">0</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-label">✦SPARKS</span>
+        <span class="stat-value spark-color" id="singularitySparks">0</span>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="shard-display">
+        <span class="shard-icon">◈</span>
+        <span class="shard-value" id="cosmicShards">0</span>
+        <span class="stat-label">SHARDS</span>
+      </div>
+      <div class="energy-display">
+        <span class="energy-icon">⚡</span>
+        <span class="energy-value" id="energyDisplay">0</span>
+        <span class="stat-label">ENERGY</span>
+      </div>
+      <div class="batch-display">
+        <span class="batch-icon">⊕</span>
+        <span class="batch-value" id="batchSizeDisplay">×1</span>
+        <span class="stat-label">BATCH</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN NAV -->
+  <nav id="mainNav">
+    <button class="main-tab-btn active" data-main-tab="tabCore"><span class="nav-icon">⬡</span> CORE</button>
+    <button class="main-tab-btn" data-main-tab="tabForge"><span class="nav-icon">⚙</span> INVENTORY &amp; FORGE</button>
+    <button class="main-tab-btn" data-main-tab="tabUpgrades"><span class="nav-icon">◈</span> COSMIC UPGRADES</button>
+    <button class="main-tab-btn" data-main-tab="tabRelics"><span class="nav-icon">◉</span> RELICS</button>
+    <button class="main-tab-btn" data-main-tab="tabTranscend"><span class="nav-icon">✦</span> CONSTELLATION</button>
+    <button class="main-tab-btn" data-main-tab="tabLeaderboard"><span class="nav-icon">🏆</span> LEADERBOARD</button>
+    <button class="main-tab-btn" data-main-tab="tabSettings"><span class="nav-icon">⚙</span> SETTINGS</button>
+  </nav>
+
+  <div id="tabPages">
+
+    <!-- CORE TAB -->
+    <div id="tabCore" class="main-tab-page active">
+      <div class="core-layout">
+        <aside id="leftPanel">
+          <div class="panel-header">
+            <span class="panel-title">SIGNAL LOG</span>
+            <span class="panel-subtitle">Recent Rolls</span>
+          </div>
+          <div id="recentRollsList"></div>
+        </aside>
+
+        <section id="centerPanel">
+          <div id="coreArea">
+            <div id="coreRingOuter">
+              <div id="coreRingMid">
+                <div id="coreRingInner">
+                  <button id="rollBtn">
+                    <span class="roll-btn-label">SYNTHESIZE</span>
+                    <span class="roll-btn-sub">CORE</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="coreOrbitals">
+              <div class="orbital" style="--od:0s"></div>
+              <div class="orbital" style="--od:0.8s"></div>
+              <div class="orbital" style="--od:1.6s"></div>
+            </div>
+          </div>
+
+          <div id="currentAuraDisplay">
+            <div id="auraRarityBadge">—</div>
+            <div id="auraNameDisplay">Roll to Begin</div>
+            <div id="auraMutationDisplay"></div>
+            <div id="auraValueDisplay"></div>
+            <div id="auraParticles"></div>
+          </div>
+
+          <div id="batchRollInfo" class="hidden">
+            <span id="batchRollSummary">—</span>
+          </div>
+
+          <div id="autoRollControls">
+            <label class="toggle-wrap">
+              <input type="checkbox" id="autoRollToggle" />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">AUTO-ROLL</span>
+            </label>
+            <div class="autoroll-speed" id="autoRollSpeedDisplay">Speed: —</div>
+          </div>
+
+          <div id="filterStatusBar">
+            <span class="filter-status-label">FILTER:</span>
+            <span id="filterStatusText">Off</span>
+            <span class="filter-status-label" style="margin-left:10px">BATCH:</span>
+            <span id="batchStatusText" class="frag-color">×1</span>
+          </div>
+
+          <button id="rebirthBtn" class="hidden">
+            <span>⟳ COSMIC REBIRTH</span>
+            <small>Ascend &amp; earn Shards</small>
+          </button>
+          <button id="transcendBtn" class="hidden transcend-btn-core">
+            <span>✦ TRANSCEND</span>
+            <small>Lv 10,000 + 1,000,000 Shards</small>
+          </button>
+        </section>
+
+        <aside id="rightPanelCore">
+          <div class="panel-header">
+            <span class="panel-title">STATISTICS</span>
+          </div>
+          <div id="statsContent"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- INVENTORY & FORGE TAB -->
+    <div id="tabForge" class="main-tab-page">
+      <div class="forge-layout">
+        <div id="inventorySection">
+          <div class="section-header">
+            <span class="panel-title">INVENTORY</span>
+            <span id="invCount" class="panel-subtitle">0 / 50</span>
+            <div class="inv-action-btns">
+              <button id="sellAllCommonBtn" class="sell-btn-small">Sell Common/Uncommon</button>
+              <button id="sellSelectedBtn" class="sell-btn-small" disabled>Sell Selected</button>
+              <button id="sendSelectedToForgeBtn" class="sell-btn-small forge-btn" disabled>→ Forge</button>
+            </div>
+          </div>
+          <div id="inventoryGrid"></div>
+        </div>
+        <div id="forgeSection">
+          <div class="section-header">
+            <span class="panel-title">SYNTHESIZER</span>
+            <span class="panel-subtitle" id="synthMinLabel">Combine 3–5 Auras</span>
+          </div>
+          <div id="synthSlots">
+            <div class="synth-slot empty" data-slot="0"><span>+</span></div>
+            <div class="synth-slot empty" data-slot="1"><span>+</span></div>
+            <div class="synth-slot empty" data-slot="2"><span>+</span></div>
+            <div class="synth-slot empty" data-slot="3"><span>+</span></div>
+            <div class="synth-slot empty" data-slot="4"><span>+</span></div>
+          </div>
+          <div id="synthInfo">Select auras from inventory</div>
+          <div class="forge-btns-row">
+            <button id="synthBtn" disabled>⚡ SYNTHESIZE</button>
+            <button id="clearSynthBtn">✕ CLEAR</button>
+          </div>
+          <div id="synthResult"></div>
+          <div class="panel-header" style="margin-top:12px">
+            <span class="panel-title">KNOWN RECIPES</span>
+          </div>
+          <div id="recipeList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COSMIC UPGRADES TAB -->
+    <div id="tabUpgrades" class="main-tab-page">
+      <div class="upgrades-page-layout">
+        <div class="panel-header">
+          <span class="panel-title">COSMIC UPGRADES</span>
+          <span class="panel-subtitle">Permanent Power — Spend Cosmic Shards ◈</span>
+        </div>
+        <div id="upgradesList"></div>
+        <div class="panel-header" style="margin-top:20px">
+          <span class="panel-title">REBIRTH</span>
+          <span class="panel-subtitle">Reset Level/Energy/Inventory for Cosmic Shards</span>
+        </div>
+        <div id="rebirthInfo"></div>
+        <button id="rebirthBtnUpgrades" class="hidden rebirth-btn-large">
+          <span>⟳ COSMIC REBIRTH</span>
+          <small>Requires Level 50</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- RELICS TAB -->
+    <div id="tabRelics" class="main-tab-page">
+      <div class="relics-page-layout">
+        <div class="panel-header">
+          <span class="panel-title">RELIC MATRIX</span>
+          <span class="panel-subtitle">Fragments: <span id="fragCountRelics" class="frag-color">0</span></span>
+        </div>
+        <div class="relic-equip-info">
+          <span>Equipped: <span id="relicEquipCount">0</span> / <span id="relicEquipMax">2</span></span>
+          <span class="panel-subtitle">Equip up to <span id="relicEquipMax2">2</span> relics</span>
+        </div>
+        <div id="relicsList"></div>
+      </div>
+    </div>
+
+    <!-- CONSTELLATION TAB -->
+    <div id="tabTranscend" class="main-tab-page">
+      <div class="transcend-page-layout">
+        <div class="panel-header">
+          <span class="panel-title">CONSTELLATION TREE</span>
+          <span class="panel-subtitle">Game-breaking infinite multipliers — spend Singularity Sparks ✦</span>
+        </div>
+        <div class="transcend-header-info">
+          <div class="transcend-stat">
+            <span class="stat-label">SINGULARITY SPARKS ✦</span>
+            <span class="stat-value spark-color" id="sparkDisplay">0</span>
+          </div>
+          <div class="transcend-stat">
+            <span class="stat-label">TRANSCENDENCES</span>
+            <span class="stat-value spark-color" id="transcendCount">0</span>
+          </div>
+          <div class="transcend-req">
+            <span class="stat-label">NEXT TRANSCEND REQUIRES:</span>
+            <span class="transcend-req-val">Level 10,000 AND 1,000,000 Cosmic Shards</span>
+          </div>
+        </div>
+        <button id="transcendBtnPage" class="hidden transcend-btn-large">
+          <span>✦ TRANSCEND NOW</span>
+          <small>HARD RESET — Wipes everything except Constellation nodes</small>
+        </button>
+        <div class="panel-header" style="margin-top:16px">
+          <span class="panel-title">CONSTELLATION NODES</span>
+          <span class="panel-subtitle">Permanent across ALL rebirths and transcendences</span>
+        </div>
+        <div id="constellationList"></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div id="tabLeaderboard" class="main-tab-page">
+      <div class="leaderboard-page-layout">
+        <div class="panel-header">
+          <span class="panel-title">GLOBAL LEADERBOARD</span>
+          <span class="panel-subtitle">Top 50 players — ranked by Transcendences then Aura Value</span>
+        </div>
+        <div class="lb-controls">
+          <button id="refreshLbBtn" class="settings-btn">↻ REFRESH</button>
+          <button id="submitScoreBtn" class="settings-btn save-btn">📤 SUBMIT MY SCORE</button>
+          <span id="lbStatus" class="lb-status">Set your username in Settings first</span>
+        </div>
+        <div id="leaderboardTable">
+          <div class="lb-loading">Click Refresh to load leaderboard...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="tabSettings" class="main-tab-page">
+      <div class="settings-page-layout">
+
+        <div class="settings-section">
+          <div class="panel-header">
+            <span class="panel-title">PLAYER IDENTITY</span>
+            <span class="panel-subtitle">Required for Leaderboard submission</span>
+          </div>
+          <div class="save-controls">
+            <label class="stat-label" for="usernameInput">USERNAME</label>
+            <input type="text" id="usernameInput" class="text-input" placeholder="Enter your username..." maxlength="24" />
+            <button id="saveUsernameBtn" class="settings-btn save-btn">SAVE USERNAME</button>
+            <span id="usernameSaveStatus" class="save-status"></span>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="panel-header">
+            <span class="panel-title">LOOT FILTER</span>
+            <span class="panel-subtitle">Auto-sell Auras below a rarity threshold during rolling</span>
+          </div>
+          <div class="filter-controls">
+            <label class="toggle-wrap">
+              <input type="checkbox" id="filterEnabled" />
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">ENABLE AUTO-SELL FILTER</span>
+            </label>
+            <div class="filter-threshold-row">
+              <span class="stat-label">AUTO-SELL BELOW:</span>
+              <select id="filterThreshold">
+                <option value="0">Sell Nothing (Off)</option>
+                <option value="1">Common</option>
+                <option value="2">Uncommon</option>
+                <option value="3">Rare</option>
+                <option value="4">Epic</option>
+                <option value="5">Legendary</option>
+                <option value="6">Mythic</option>
+                <option value="7">Divine</option>
+                <option value="8">Cosmic</option>
+                <option value="9">Celestial</option>
+                <option value="10">Transcendent</option>
+                <option value="11">Supernal</option>
+                <option value="12">Primordial</option>
+              </select>
+            </div>
+            <div class="filter-desc" id="filterDesc">Filter is disabled.</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="panel-header"><span class="panel-title">SAVE MANAGEMENT</span></div>
+          <div class="save-controls">
+            <button id="manualSaveBtn" class="settings-btn save-btn">💾 SAVE GAME</button>
+            <button id="exportSaveBtn" class="settings-btn">📤 EXPORT SAVE</button>
+            <button id="importSaveTrigger" class="settings-btn">📥 IMPORT SAVE</button>
+            <input type="file" id="importSaveFile" accept=".json" style="display:none" />
+            <div class="save-status" id="saveStatus">Auto-saves every 5s</div>
+          </div>
+        </div>
+
+        <div class="settings-section danger-zone">
+          <div class="panel-header"><span class="panel-title" style="color:#ef4444">DANGER ZONE</span></div>
+          <button id="wipeSaveBtn">⚠ WIPE ALL SAVE DATA</button>
+        </div>
+
+        <div class="settings-section">
+          <div class="panel-header"><span class="panel-title">CONTROLS</span></div>
+          <div class="controls-list">
+            <div class="ctrl-row"><kbd>SPACE</kbd> Manual Roll</div>
+            <div class="ctrl-row"><kbd>Click</kbd> Select Aura</div>
+            <div class="ctrl-row"><kbd>Dbl-Click</kbd> Sell Aura</div>
+            <div class="ctrl-row"><kbd>Right-Click</kbd> Send to Forge</div>
+            <div class="ctrl-row"><kbd>Click Anomaly</kbd> Trigger Frenzy Mode</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end tabPages -->
+
+  <div id="tooltip"></div>
+  <div id="toastContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
